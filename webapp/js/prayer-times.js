@@ -36,6 +36,7 @@ const PrayerTimes = {
             this.selectedDistrict = e.target.value;
             localStorage.setItem('selected_district', this.selectedDistrict);
             this.updateDisplay();
+            Notifications.syncSettingsToBackend();
         });
 
         // Fetch and display prayer times

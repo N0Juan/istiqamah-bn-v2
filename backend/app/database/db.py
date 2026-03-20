@@ -102,6 +102,22 @@ class PrayerTimesDB:
                 )
             """)
 
+            # Push notification subscriptions
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS push_subscriptions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    endpoint TEXT NOT NULL UNIQUE,
+                    p256dh TEXT NOT NULL,
+                    auth TEXT NOT NULL,
+                    district TEXT DEFAULT 'bruneiMuara',
+                    reminder_advance INTEGER DEFAULT 5,
+                    end_reminders_enabled BOOLEAN DEFAULT 0,
+                    end_reminder_advance INTEGER DEFAULT 15,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             self.conn.commit()
             logger.info("Database tables created/verified")
 
@@ -263,6 +279,66 @@ class PrayerTimesDB:
         except sqlite3.Error as e:
             logger.error(f"Failed to check year existence: {e}")
             return False
+
+    # --- Push subscription methods ---
+
+    def add_push_subscription(self, endpoint, p256dh, auth, district='bruneiMuara',
+                              reminder_advance=5, end_reminders_enabled=False,
+                              end_reminder_advance=15):
+        """Insert or update a push subscription."""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO push_subscriptions
+                (endpoint, p256dh, auth, district, reminder_advance,
+                 end_reminders_enabled, end_reminder_advance, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """, (endpoint, p256dh, auth, district, reminder_advance,
+                  end_reminders_enabled, end_reminder_advance))
+            self.conn.commit()
+            logger.info(f"Push subscription saved: {endpoint[:60]}...")
+        except sqlite3.Error as e:
+            logger.error(f"Failed to save push subscription: {e}")
+            raise
+
+    def remove_push_subscription(self, endpoint):
+        """Remove a push subscription by endpoint."""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("DELETE FROM push_subscriptions WHERE endpoint = ?", (endpoint,))
+            self.conn.commit()
+            logger.info(f"Push subscription removed: {endpoint[:60]}...")
+        except sqlite3.Error as e:
+            logger.error(f"Failed to remove push subscription: {e}")
+            raise
+
+    def update_push_settings(self, endpoint, district='bruneiMuara',
+                             reminder_advance=5, end_reminders_enabled=False,
+                             end_reminder_advance=15):
+        """Update notification settings for an existing subscription."""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("""
+                UPDATE push_subscriptions
+                SET district = ?, reminder_advance = ?, end_reminders_enabled = ?,
+                    end_reminder_advance = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE endpoint = ?
+            """, (district, reminder_advance, end_reminders_enabled,
+                  end_reminder_advance, endpoint))
+            self.conn.commit()
+        except sqlite3.Error as e:
+            logger.error(f"Failed to update push settings: {e}")
+            raise
+
+    def get_all_push_subscriptions(self):
+        """Return all active push subscriptions."""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT * FROM push_subscriptions")
+            return [dict(row) for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            logger.error(f"Failed to fetch push subscriptions: {e}")
+            return []
 
     def close(self):
         """Close database connection"""

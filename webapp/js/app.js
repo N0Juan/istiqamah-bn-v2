@@ -108,12 +108,20 @@ const App = {
         const notificationsEnabled = localStorage.getItem('notifications_enabled') === 'true';
         notificationsToggle.checked = notificationsEnabled;
 
-        notificationsToggle.addEventListener('change', (e) => {
+        notificationsToggle.addEventListener('change', async (e) => {
             const enabled = e.target.checked;
             localStorage.setItem('notifications_enabled', enabled);
 
             if (enabled) {
-                this.requestNotificationPermission();
+                await this.requestNotificationPermission();
+                // Subscribe to Web Push for background notifications
+                const subscribed = await Notifications.subscribeToPush();
+                if (subscribed) {
+                    console.log('Web Push subscribed — notifications work in background');
+                }
+            } else {
+                // Unsubscribe from Web Push
+                await Notifications.unsubscribeFromPush();
             }
         });
 
@@ -124,6 +132,7 @@ const App = {
 
         endRemindersToggle.addEventListener('change', (e) => {
             localStorage.setItem('end_reminders_enabled', e.target.checked);
+            Notifications.syncSettingsToBackend();
         });
 
         // Reminder advance time
@@ -133,6 +142,7 @@ const App = {
 
         reminderAdvance.addEventListener('change', (e) => {
             localStorage.setItem('reminder_advance', e.target.value);
+            Notifications.syncSettingsToBackend();
         });
 
         // Test notification button
@@ -207,6 +217,7 @@ const App = {
         }
 
         if (Notification.permission === 'granted') {
+            Notifications.subscribeToPush();
             return;
         }
 
@@ -214,6 +225,7 @@ const App = {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
                 console.log('Notification permission granted');
+                Notifications.subscribeToPush();
             }
         }
     },
@@ -221,8 +233,12 @@ const App = {
     checkNotificationPermission() {
         const notificationsEnabled = localStorage.getItem('notifications_enabled') === 'true';
 
-        if (notificationsEnabled && 'Notification' in window && Notification.permission === 'default') {
-            this.requestNotificationPermission();
+        if (notificationsEnabled && 'Notification' in window) {
+            if (Notification.permission === 'default') {
+                this.requestNotificationPermission();
+            } else if (Notification.permission === 'granted') {
+                Notifications.subscribeToPush();
+            }
         }
     },
 
@@ -262,32 +278,3 @@ window.addEventListener('offline', () => {
     console.log('App is offline - using cached data');
 });
 
-// Global test function for debugging
-window.testNotif = function() {
-    console.log('=== Testing Notification ===');
-    console.log('Permission:', Notification.permission);
-    
-    if (Notification.permission !== 'granted') {
-        console.log('Requesting permission...');
-        Notification.requestPermission().then(perm => {
-            console.log('Permission granted:', perm);
-            if (perm === 'granted') {
-                new Notification('✅ Test Works!', { body: 'Notifications are working!' });
-            }
-        });
-    } else {
-        try {
-            console.log('Creating notification...');
-            const n = new Notification('✅ Test Works!', { 
-                body: 'Notifications are working!',
-                icon: '/icons/icon-192.png'
-            });
-            console.log('Notification object:', n);
-            console.log('✅ Notification created successfully!');
-        } catch(e) {
-            console.error('❌ Error creating notification:', e);
-        }
-    }
-};
-
-console.log('💡 Tip: Run testNotif() in console to test notifications');

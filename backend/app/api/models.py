@@ -1,7 +1,7 @@
 """
 Pydantic models for API request/response validation
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from datetime import date
 
@@ -119,3 +119,56 @@ class ErrorResponse(BaseModel):
     """Error response model"""
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Detailed error information")
+
+
+# --- Push Notification Models ---
+
+class PushSubscriptionKeys(BaseModel):
+    """Browser push subscription keys"""
+    p256dh: str
+    auth: str
+
+
+class PushSubscriptionInfo(BaseModel):
+    """Browser push subscription object"""
+    endpoint: str
+    keys: PushSubscriptionKeys
+
+
+class PushNotificationSettings(BaseModel):
+    """User notification preferences sent with subscription"""
+    district: str = "bruneiMuara"
+    reminder_advance: int = 5
+    end_reminders_enabled: bool = False
+    end_reminder_advance: int = 15
+
+
+class PushSubscriptionRequest(BaseModel):
+    """Request body for subscribing to push notifications"""
+    subscription: PushSubscriptionInfo
+    settings: PushNotificationSettings
+
+
+class PushUnsubscribeRequest(BaseModel):
+    """Request body for unsubscribing"""
+    endpoint: str
+
+
+class PushSettingsUpdateRequest(BaseModel):
+    """Request body for updating notification settings"""
+    endpoint: str
+    settings: PushNotificationSettings
+
+
+class PushSendRequest(BaseModel):
+    """Request body for sending a push notification to all subscribers (admin)"""
+    title: str = Field(..., max_length=200, description="Notification title")
+    body: str = Field(..., max_length=1000, description="Notification body text")
+    url: Optional[str] = Field(None, max_length=2048, description="URL to open on click")
+
+    @field_validator("url")
+    @classmethod
+    def url_must_be_relative(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.startswith("/"):
+            raise ValueError("URL must be a relative path starting with /")
+        return v

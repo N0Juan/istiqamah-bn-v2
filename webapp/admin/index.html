@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>IstiqamahBN Admin - Push Notifications</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Crimson+Pro:wght@300;400;600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           IstiqamahBN Admin — Geometric Islamic Command Center
+           ═══════════════════════════════════════════════════════ */
+
+        :root {
+            --dawn: #F4EAE0;
+            --cream: #FAF9F6;
+            --sand: #E8D5C4;
+            --teal-deep: #0F4C5C;
+            --teal: #5C8D89;
+            --teal-light: #9DBEB9;
+            --gold: #D4AF37;
+            --gold-muted: #C9A961;
+            --sage: #9CA986;
+            --midnight: #1A2B3C;
+            --charcoal: #2C3E50;
+            --red-soft: #C0392B;
+            --green-soft: #27AE60;
+
+            --font-display: 'Crimson Pro', Georgia, serif;
+            --font-body: 'Manrope', -apple-system, sans-serif;
+            --font-arabic: 'Amiri', serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--midnight);
+            color: var(--cream);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Geometric Background ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(15, 76, 92, 0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(212, 175, 55, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Subtle geometric pattern overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Layout ── */
+        .admin-shell {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* ── Header ── */
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+        }
+
+        .admin-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .admin-logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--teal-deep), var(--teal));
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 4px 16px rgba(15, 76, 92, 0.4);
+        }
+
+        .admin-logo svg { width: 22px; height: 22px; color: var(--gold); }
+
+        .admin-title {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 300;
+            letter-spacing: 0.02em;
+            color: var(--cream);
+        }
+
+        .admin-title span {
+            font-family: var(--font-arabic);
+            font-size: 1rem;
+            color: var(--gold-muted);
+            margin-left: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .admin-badge {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--teal-light);
+            background: rgba(15, 76, 92, 0.3);
+            border: 1px solid rgba(92, 141, 137, 0.25);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+        }
+
+        .back-link {
+            color: var(--teal-light);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .back-link:hover { opacity: 1; }
+
+        /* ── Stats Row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(36, 52, 71, 0.6);
+            border: 1px solid rgba(92, 141, 137, 0.12);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s, transform 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(212, 175, 55, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--teal-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--cream);
+            line-height: 1;
+        }
+
+        .stat-value.gold { color: var(--gold); }
+        .stat-value.teal { color: var(--teal-light); }
+
+        .stat-sub {
+            font-size: 0.72rem;
+            color: var(--teal-light);
+            opacity: 0.6;
+            margin-top: 0.35rem;
+        }
+
+        /* ── Grid Layout ── */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .admin-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+        }
+
+        /* ── Card ── */
+        .card {
+            background: rgba(36, 52, 71, 0.5);
+            border: 1px solid rgba(92, 141, 137, 0.1);
+            border-radius: 16px;
+            padding: 1.75rem;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s;
+        }
+
+        .card:hover { border-color: rgba(92, 141, 137, 0.2); }
+
+        .card-full { grid-column: 1 / -1; }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid rgba(92, 141, 137, 0.1);
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+        }
+
+        .card-icon svg { width: 16px; height: 16px; }
+
+        .card-icon.teal { background: rgba(15, 76, 92, 0.4); color: var(--teal-light); }
+        .card-icon.gold { background: rgba(212, 175, 55, 0.15); color: var(--gold); }
+        .card-icon.sage { background: rgba(156, 169, 134, 0.2); color: var(--sage); }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--cream);
+        }
+
+        /* ── Form Elements ── */
+        .form-group { margin-bottom: 1rem; }
+
+        .form-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--teal-light);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            background: rgba(26, 43, 60, 0.8);
+            border: 1px solid rgba(92, 141, 137, 0.2);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            color: var(--cream);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            outline: none;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            border-color: var(--gold-muted);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: rgba(157, 190, 185, 0.4);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.25rem;
+            border: none;
+            border-radius: 10px;
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal-deep), #0d6070);
+            color: var(--cream);
+            box-shadow: 0 4px 16px rgba(15, 76, 92, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(15, 76, 92, 0.5);
+        }
+
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), #b8962d);
+            color: var(--midnight);
+            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.45);
+        }
+
+        .btn-ghost {
+            background: rgba(92, 141, 137, 0.1);
+            color: var(--teal-light);
+            border: 1px solid rgba(92, 141, 137, 0.2);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(92, 141, 137, 0.2);
+            border-color: rgba(92, 141, 137, 0.35);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-block { width: 100%; }
+
+        /* Spinner inside button */
+        .btn .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Quick Actions ── */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 480px) {
+            .quick-actions { grid-template-columns: 1fr; }
+        }
+
+        .quick-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 1rem 1.15rem;
+            background: rgba(26, 43, 60, 0.6);
+            border: 1px solid rgba(92, 141, 137, 0.12);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-align: left;
+            font-family: var(--font-body);
+            color: var(--cream);
+        }
+
+        .quick-btn:hover {
+            background: rgba(15, 76, 92, 0.3);
+            border-color: rgba(92, 141, 137, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .quick-btn:active { transform: translateY(0); }
+
+        .quick-btn-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .quick-btn-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .quick-btn-desc {
+            font-size: 0.7rem;
+            color: var(--teal-light);
+            opacity: 0.6;
+            line-height: 1.3;
+        }
+
+        /* ── Subscribers Table ── */
+        .subscribers-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 0.5rem;
+        }
+
+        .subscribers-table th {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--teal-light);
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid rgba(92, 141, 137, 0.15);
+        }
+
+        .subscribers-table td {
+            font-size: 0.78rem;
+            padding: 0.65rem 0.75rem;
+            border-bottom: 1px solid rgba(92, 141, 137, 0.06);
+            color: var(--sand);
+        }
+
+        .subscribers-table tr:hover td {
+            background: rgba(15, 76, 92, 0.1);
+        }
+
+        .endpoint-preview {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.7rem;
+            color: var(--teal-light);
+            opacity: 0.7;
+            word-break: break-all;
+        }
+
+        .domain-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            background: rgba(15, 76, 92, 0.3);
+            color: var(--teal-light);
+        }
+
+        /* ── History Log ── */
+        .history-log {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            max-height: 340px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(92, 141, 137, 0.2) transparent;
+        }
+
+        .history-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(26, 43, 60, 0.4);
+            border-radius: 10px;
+            border-left: 3px solid var(--teal);
+            animation: fadeSlideIn 0.3s ease-out;
+        }
+
+        .history-entry.failed { border-left-color: var(--red-soft); }
+        .history-entry.success { border-left-color: var(--green-soft); }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .history-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 0.3rem;
+            flex-shrink: 0;
+        }
+
+        .history-dot.success { background: var(--green-soft); }
+        .history-dot.partial { background: var(--gold); }
+        .history-dot.failed { background: var(--red-soft); }
+
+        .history-content { flex: 1; min-width: 0; }
+
+        .history-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--cream);
+            margin-bottom: 0.15rem;
+        }
+
+        .history-meta {
+            font-size: 0.7rem;
+            color: var(--teal-light);
+            opacity: 0.6;
+        }
+
+        .history-stats {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.3rem;
+        }
+
+        .history-stat {
+            font-size: 0.68rem;
+            font-weight: 500;
+        }
+
+        .history-stat.sent { color: var(--green-soft); }
+        .history-stat.failed { color: var(--red-soft); }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--teal-light);
+            opacity: 0.4;
+            font-size: 0.85rem;
+        }
+
+        /* ── Login Gate ── */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: var(--midnight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-overlay.hidden { display: none; }
+
+        .login-box {
+            background: rgba(36, 52, 71, 0.7);
+            border: 1px solid rgba(92, 141, 137, 0.15);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 380px;
+            backdrop-filter: blur(16px);
+            text-align: center;
+        }
+
+        .login-box .admin-logo {
+            margin: 0 auto 1.25rem;
+        }
+
+        .login-box h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: var(--cream);
+            margin-bottom: 0.4rem;
+        }
+
+        .login-box p {
+            font-size: 0.78rem;
+            color: var(--teal-light);
+            opacity: 0.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-error {
+            font-size: 0.78rem;
+            color: var(--red-soft);
+            margin-top: 0.75rem;
+            min-height: 1.2em;
+        }
+
+        /* ── Toast ── */
+        .toast-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            backdrop-filter: blur(16px);
+            animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 360px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.success {
+            background: rgba(39, 174, 96, 0.15);
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            color: #6deca6;
+        }
+
+        .toast.error {
+            background: rgba(192, 57, 43, 0.15);
+            border: 1px solid rgba(192, 57, 43, 0.3);
+            color: #f09090;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ── Page Load Animation ── */
+        .admin-shell > * {
+            animation: sectionFadeIn 0.5s ease-out both;
+        }
+        .admin-shell > *:nth-child(1) { animation-delay: 0s; }
+        .admin-shell > *:nth-child(2) { animation-delay: 0.08s; }
+        .admin-shell > *:nth-child(3) { animation-delay: 0.16s; }
+        .admin-shell > *:nth-child(4) { animation-delay: 0.24s; }
+
+        @keyframes sectionFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Gate -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-box">
+            <div class="admin-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+            </div>
+            <h2>Admin Access</h2>
+            <p>Enter your admin API key to continue</p>
+            <form id="login-form" autocomplete="off">
+                <div class="form-group">
+                    <input class="form-input" type="password" id="login-key" placeholder="Admin API key" required autofocus>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Authenticate
+                </button>
+            </form>
+            <div class="login-error" id="login-error"></div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="admin-shell" id="admin-shell" style="display:none;">
+
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="admin-header-left">
+                <div class="admin-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="admin-title">IstiqamahBN <span>إدارة</span></h1>
+                    <a href="/" class="back-link">&larr; Back to app</a>
+                </div>
+            </div>
+            <div class="admin-badge">Admin Panel</div>
+        </header>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">Subscribers</div>
+                <div class="stat-value teal" id="stat-subscribers">--</div>
+                <div class="stat-sub">Active push subscriptions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Notifications Sent</div>
+                <div class="stat-value gold" id="stat-sent">0</div>
+                <div class="stat-sub">This session</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="stat-failed" style="color: var(--red-soft);">0</div>
+                <div class="stat-sub">Delivery errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Push</div>
+                <div class="stat-value" id="stat-last" style="font-size:1.1rem; color: var(--sand);">Never</div>
+                <div class="stat-sub">Most recent notification</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="admin-grid">
+
+            <!-- Send Notification -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon teal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Send Notification</h2>
+                </div>
+                <form id="send-form" autocomplete="off">
+                    <div class="form-group">
+                        <label class="form-label" for="notif-title">Title</label>
+                        <input class="form-input" type="text" id="notif-title" placeholder="e.g. Prayer Time Reminder" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="notif-body">Message</label>
+                        <textarea class="form-textarea" id="notif-body" placeholder="Notification body text..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="notif-url">URL (optional)</label>
+                        <input class="form-input" type="text" id="notif-url" placeholder="/">
+                    </div>
+                    <button type="submit" class="btn btn-gold btn-block" id="send-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+                        Send to All Subscribers
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon gold">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Quick Actions</h2>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="sendPrayerTimes()">
+                        <div class="quick-btn-icon">&#x1F54C;</div>
+                        <div class="quick-btn-label">Today's Prayer Times</div>
+                        <div class="quick-btn-desc">Send formatted prayer schedule</div>
+                    </button>
+                    <button class="quick-btn" onclick="sendPreset('ramadan')">
+                        <div class="quick-btn-icon">&#x1F319;</div>
+                        <div class="quick-btn-label">Ramadan Reminder</div>
+                        <div class="quick-btn-desc">Iftar & Suhoor alert</div>
+                    </button>
+                    <button class="quick-btn" onclick="sendPreset('jummah')">
+                        <div class="quick-btn-icon">&#x1F64F;</div>
+                        <div class="quick-btn-label">Jummah Reminder</div>
+                        <div class="quick-btn-desc">Friday prayer notification</div>
+                    </button>
+                    <button class="quick-btn" onclick="fillCustom()">
+                        <div class="quick-btn-icon">&#x1F4E2;</div>
+                        <div class="quick-btn-label">Custom Announcement</div>
+                        <div class="quick-btn-desc">Compose your own message</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subscribers -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon sage">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Subscribers</h2>
+                </div>
+                <div id="subscribers-content">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Push History -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon teal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Push History</h2>
+                </div>
+                <div class="history-log" id="history-log">
+                    <div class="empty-state">No notifications sent yet this session</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// IstiqamahBN Admin Dashboard — Logic
+// ═══════════════════════════════════════════════════════
+
+const API = '';
+let sessionSent = 0;
+let sessionFailed = 0;
+const pushHistory = [];
+
+function getAdminKey() {
+    return sessionStorage.getItem('adminApiKey') || '';
+}
+
+function adminHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAdminKey()}`,
+    };
+}
+
+// ── Login Gate ──
+async function tryLogin(key) {
+    try {
+        const res = await fetch(`${API}/api/v1/push/subscribers`, {
+            headers: { 'Authorization': `Bearer ${key}` },
+        });
+        if (res.status === 401) return false;
+        if (res.ok) return true;
+        return false;
+    } catch {
+        return false;
+    }
+}
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const key = document.getElementById('login-key').value.trim();
+    const errEl = document.getElementById('login-error');
+    const btn = document.getElementById('login-btn');
+
+    if (!key) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Verifying...';
+    errEl.textContent = '';
+
+    const valid = await tryLogin(key);
+    if (valid) {
+        sessionStorage.setItem('adminApiKey', key);
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('admin-shell').style.display = '';
+        initDashboard();
+    } else {
+        errEl.textContent = 'Invalid API key. Access denied.';
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Authenticate`;
+    }
+});
+
+// Check if already authenticated
+(async () => {
+    const savedKey = getAdminKey();
+    if (savedKey && await tryLogin(savedKey)) {
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('admin-shell').style.display = '';
+        initDashboard();
+    }
+})();
+
+function initDashboard() {
+    loadSubscribers();
+}
+
+// ── Toast Notifications ──
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+// ── Load Subscribers ──
+async function loadSubscribers() {
+    try {
+        const res = await fetch(`${API}/api/v1/push/subscribers`, {
+            headers: { 'Authorization': `Bearer ${getAdminKey()}` },
+        });
+        const data = await res.json();
+
+        document.getElementById('stat-subscribers').textContent = data.count;
+
+        const container = document.getElementById('subscribers-content');
+
+        if (data.count === 0) {
+            container.innerHTML = '<div class="empty-state">No subscribers yet</div>';
+            return;
+        }
+
+        let html = `<table class="subscribers-table">
+            <thead><tr><th>#</th><th>Service</th><th>Subscribed</th></tr></thead>
+            <tbody>`;
+
+        data.subscribers.forEach((sub, i) => {
+            const date = sub.created_at ? new Date(sub.created_at + 'Z').toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '—';
+
+            html += `<tr>
+                <td>${i + 1}</td>
+                <td><span class="domain-badge">${escapeHtml(sub.domain)}</span></td>
+                <td>${escapeHtml(date)}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (err) {
+        document.getElementById('subscribers-content').innerHTML =
+            '<div class="empty-state" style="color:var(--red-soft)">Failed to load subscribers</div>';
+    }
+}
+
+// ── Send Notification ──
+async function sendNotification(title, body, url = '/') {
+    const btn = document.getElementById('send-btn');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Sending...';
+
+    try {
+        const res = await fetch(`${API}/api/v1/push/send`, {
+            method: 'POST',
+            headers: adminHeaders(),
+            body: JSON.stringify({ title, body, url }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.detail || 'Send failed');
+
+        sessionSent += data.sent;
+        sessionFailed += data.failed;
+
+        document.getElementById('stat-sent').textContent = sessionSent;
+        document.getElementById('stat-failed').textContent = sessionFailed;
+        document.getElementById('stat-last').textContent = new Date().toLocaleTimeString('en-GB', {
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        addHistoryEntry(title, body, data);
+
+        if (data.expired_removed > 0) {
+            loadSubscribers();
+        }
+
+        showToast(`Sent to ${data.sent} subscriber${data.sent !== 1 ? 's' : ''}${data.failed ? `, ${data.failed} failed` : ''}`);
+    } catch (err) {
+        showToast(err.message, 'error');
+        addHistoryEntry(title, body, { sent: 0, failed: 1, error: err.message });
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
+
+// ── History ──
+function addHistoryEntry(title, body, result) {
+    const log = document.getElementById('history-log');
+
+    // Remove empty state
+    const empty = log.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const status = result.sent > 0 ? (result.failed > 0 ? 'partial' : 'success') : 'failed';
+    const entryClass = result.failed > 0 && result.sent === 0 ? 'failed' : 'success';
+    const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const entry = document.createElement('div');
+    entry.className = `history-entry ${entryClass}`;
+    entry.innerHTML = `
+        <div class="history-dot ${status}"></div>
+        <div class="history-content">
+            <div class="history-title">${escapeHtml(title)}</div>
+            <div class="history-meta">${time} &middot; ${escapeHtml(body.substring(0, 60))}${body.length > 60 ? '...' : ''}</div>
+            <div class="history-stats">
+                <span class="history-stat sent">${result.sent} sent</span>
+                ${result.failed ? `<span class="history-stat failed">${result.failed} failed</span>` : ''}
+            </div>
+        </div>
+    `;
+
+    log.prepend(entry);
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ── Form Submit ──
+document.getElementById('send-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('notif-title').value.trim();
+    const body = document.getElementById('notif-body').value.trim();
+    const url = document.getElementById('notif-url').value.trim() || '/';
+
+    if (!title || !body) return;
+
+    await sendNotification(title, body, url);
+    document.getElementById('notif-title').value = '';
+    document.getElementById('notif-body').value = '';
+    document.getElementById('notif-url').value = '';
+});
+
+// ── Quick Actions ──
+async function sendPrayerTimes() {
+    try {
+        const res = await fetch(`${API}/api/v1/prayer-times/brunei/today`);
+        const data = await res.json();
+        const pt = data.prayer_times;
+        const title = `Prayer Times - ${data.date}`;
+        const body = `Suboh ${pt.suboh} | Zohor ${pt.zohor} | Asar ${pt.asar} | Maghrib ${pt.maghrib} | Isyak ${pt.isyak}`;
+        await sendNotification(title, body);
+    } catch (err) {
+        showToast('Failed to fetch prayer times', 'error');
+    }
+}
+
+function sendPreset(type) {
+    const presets = {
+        ramadan: {
+            title: 'Ramadan Reminder',
+            body: 'May this blessed month bring you closer to Allah SWT. Remember to prepare for Iftar and perform your prayers on time.',
+        },
+        jummah: {
+            title: 'Jummah Mubarak',
+            body: 'It is Friday! Remember to perform Surah Al-Kahf, increase your salawat, and attend Jummah prayer.',
+        },
+    };
+
+    const preset = presets[type];
+    if (preset) {
+        document.getElementById('notif-title').value = preset.title;
+        document.getElementById('notif-body').value = preset.body;
+        document.getElementById('notif-url').value = '/';
+        document.getElementById('notif-title').focus();
+        showToast('Preset loaded — review and send', 'success');
+    }
+}
+
+function fillCustom() {
+    document.getElementById('notif-title').value = '';
+    document.getElementById('notif-body').value = '';
+    document.getElementById('notif-url').value = '/';
+    document.getElementById('notif-title').focus();
+}
+
+// ── Init is triggered by login gate ──
+</script>
+</body>
+</html>

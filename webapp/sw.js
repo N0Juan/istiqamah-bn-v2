@@ -1,5 +1,5 @@
 // Service Worker for IstiqamahBN PWA
-const CACHE_NAME = 'istiqamah-bn-v1.0.1';
+const CACHE_NAME = 'istiqamah-bn-v1.1.0';
 const API_CACHE_NAME = 'istiqamah-api-v1';
 
 const STATIC_ASSETS = [
@@ -64,31 +64,31 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
+    // Skip caching for push/admin API endpoints
+    if (url.pathname.startsWith('/api/v1/push/')) {
+        event.respondWith(fetch(request));
+        return;
+    }
+
     // API requests - network first, fallback to cache
     if (url.pathname.startsWith('/api/')) {
         event.respondWith(
             fetch(request)
                 .then((response) => {
-                    // Clone the response
                     const responseClone = response.clone();
-
-                    // Cache the response
                     caches.open(API_CACHE_NAME)
                         .then((cache) => {
                             cache.put(request, responseClone);
                         });
-
                     return response;
                 })
                 .catch(() => {
-                    // Network failed, try cache
                     return caches.match(request)
                         .then((cachedResponse) => {
                             if (cachedResponse) {
                                 console.log('[Service Worker] Serving API from cache:', request.url);
                                 return cachedResponse;
                             }
-                            // No cache available
                             return new Response(
                                 JSON.stringify({ error: 'Offline and no cached data available' }),
                                 {
@@ -109,32 +109,21 @@ self.addEventListener('fetch', (event) => {
                 if (cachedResponse) {
                     return cachedResponse;
                 }
-
-                // Not in cache, fetch from network
                 return fetch(request)
                     .then((response) => {
-                        // Don't cache non-successful responses
                         if (!response || response.status !== 200 || response.type === 'error') {
                             return response;
                         }
-
-                        // Clone the response
                         const responseClone = response.clone();
-
-                        // Cache it for future use
                         caches.open(CACHE_NAME)
                             .then((cache) => {
                                 cache.put(request, responseClone);
                             });
-
                         return response;
                     });
             })
             .catch(() => {
-                // Both cache and network failed
                 console.error('[Service Worker] Failed to fetch:', request.url);
-
-                // Return a basic offline page for HTML requests
                 if (request.headers.get('accept').includes('text/html')) {
                     return new Response(
                         '<html><body><h1>Offline</h1><p>IstiqamahBN is offline. Please check your connection.</p></body></html>',
@@ -145,7 +134,7 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
-// Background sync for future prayer time notifications
+// Background sync for prayer times
 self.addEventListener('sync', (event) => {
     if (event.tag === 'sync-prayer-times') {
         event.waitUntil(
@@ -161,26 +150,65 @@ self.addEventListener('sync', (event) => {
     }
 });
 
+// --- Web Push: receive push notifications from server ---
+self.addEventListener('push', (event) => {
+    console.log('[Service Worker] Push received');
+
+    let data = { title: 'IstiqamahBN', body: 'Prayer time notification' };
+
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data.body = event.data.text();
+        }
+    }
+
+    const options = {
+        body: data.body,
+        icon: data.icon || '/icons/icon-192.png',
+        badge: data.badge || '/icons/icon-96.png',
+        tag: data.tag || 'prayer-notification',
+        vibrate: [200, 100, 200],
+        data: data.data || { url: '/' },
+        requireInteraction: !!(data.tag && data.tag.includes('end')),
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
+});
+
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
     console.log('[Service Worker] Notification clicked:', event.notification.tag);
 
+    let urlToOpen = (event.notification.data && event.notification.data.url) || '/';
+
+    // Validate URL — only allow same-origin relative paths
+    try {
+        const resolved = new URL(urlToOpen, self.location.origin);
+        if (resolved.origin !== self.location.origin) {
+            urlToOpen = '/';
+        } else {
+            urlToOpen = resolved.href;
+        }
+    } catch {
+        urlToOpen = '/';
+    }
+
     event.notification.close();
 
-    // Focus the app window or open it
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then((clientList) => {
-                // If app is already open, focus it
                 for (let client of clientList) {
                     if ('focus' in client) {
                         return client.focus();
                     }
                 }
-
-                // Otherwise, open a new window
                 if (clients.openWindow) {
-                    return clients.openWindow('/');
+                    return clients.openWindow(urlToOpen);
                 }
             })
     );

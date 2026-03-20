@@ -7,11 +7,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: istiqamah-backend
-    ports:
-      - "8000:8000"
     volumes:
       - ./backend/data:/app/data
       - ./backend/logs:/app/logs
+    env_file:
+      - .env
     environment:
       - DATABASE_PATH=/app/data/prayer_times.db
       - LOG_DIR=/app/logs
@@ -19,11 +19,16 @@ services:
     networks:
       - istiqamah-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
 
   # Frontend Webapp Service
   webapp:
@@ -32,17 +37,22 @@ services:
       dockerfile: Dockerfile
     container_name: istiqamah-webapp
     ports:
-      - "80:80"
+      - "53431:80"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
       - istiqamah-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
 
 networks:
   istiqamah-network:

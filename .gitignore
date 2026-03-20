@@ -33,6 +33,10 @@ yarn-error.log*
 # macOS
 .DS_Store
 
+# Environment / secrets
+.env
+backend/.env
+
 # Project specific
 backend/data/*.db
 backend/logs/*.log
