@@ -107,25 +107,30 @@ class MORAScraperV2:
         return {
             'date': date_obj.strftime('%Y-%m-%d'),
             'hijri_date': item.get('Tarikh', 'Unknown'),
-            'imsak': self._normalize_time(item.get('Imsak', '')),
-            'suboh': self._normalize_time(item.get('Suboh', '')),
-            'syuruk': self._normalize_time(item.get('Syuruk', '')),
-            'doha': self._normalize_time(item.get('Doha', '')),
-            'zohor': self._normalize_time(item.get('Zohor', '')),
-            'asar': self._normalize_time(item.get('Asar', '')),
-            'maghrib': self._normalize_time(item.get('Maghrib', '')),
-            'isyak': self._normalize_time(item.get('Isyak', '')),
+            'imsak': self._normalize_time(item.get('Imsak', ''), pm=False),
+            'suboh': self._normalize_time(item.get('Suboh', ''), pm=False),
+            'syuruk': self._normalize_time(item.get('Syuruk', ''), pm=False),
+            'doha': self._normalize_time(item.get('Doha', ''), pm=False),
+            'zohor': self._normalize_time(item.get('Zohor', ''), pm=True),
+            'asar': self._normalize_time(item.get('Asar', ''), pm=True),
+            'maghrib': self._normalize_time(item.get('Maghrib', ''), pm=True),
+            'isyak': self._normalize_time(item.get('Isyak', ''), pm=True),
         }
 
-    def _normalize_time(self, time_str: str) -> str:
+    def _normalize_time(self, time_str: str, pm: bool = False) -> str:
         """
-        Normalize time from MORA format (H.MM) to standard format (HH:MM)
+        Normalize time from MORA format (H.MM) to 24-hour format (HH:MM)
+
+        MORA returns all times without AM/PM. Morning prayers (Imsak, Suboh,
+        Syuruk, Doha) are AM; afternoon/evening prayers (Zohor, Asar, Maghrib,
+        Isyak) are PM.
 
         Args:
             time_str: Time string (e.g., "5.06" or "12.35")
+            pm: If True, convert to PM (add 12 if hour < 12)
 
         Returns:
-            Normalized time string (e.g., "05:06" or "12:35")
+            Normalized 24-hour time string (e.g., "05:06" or "15:55")
         """
         if not time_str:
             return "00:00"
@@ -133,11 +138,15 @@ class MORAScraperV2:
         # Replace period with colon
         time_str = time_str.replace('.', ':').strip()
 
-        # Ensure HH:MM format
         if ':' in time_str:
             parts = time_str.split(':')
             hour = int(parts[0])
             minute = int(parts[1])
+
+            # Convert to 24-hour: PM prayers with hour < 12 get +12
+            if pm and hour < 12:
+                hour += 12
+
             return f"{hour:02d}:{minute:02d}"
 
         logger.warning(f"Invalid time format: {time_str}")
